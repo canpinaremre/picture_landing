@@ -13,7 +13,7 @@ import picamera
 # Settings
 ################################################################################################
 x,y,z =0,0,0
-exit_sp_buffer=False
+
 
 #Calibrate the camera !!!
 #Settings
@@ -46,8 +46,6 @@ vehicle = connect(connection_string, wait_ready=True)
 def setpoint_buffer():
     global x,y,z,exit_sp_buffer
     while True:
-        if exit_sp_buffer:
-            break
         msg=vehicle.message_factory.set_position_target_local_ned_encode(
             0,
             0,0,
@@ -242,7 +240,7 @@ def missionController(start,finish):
     time.sleep(2)
     print ("Landed!")
 
-    exit_sp_buffer = True
+    
     vehicle.close()
         
 
