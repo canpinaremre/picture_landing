@@ -5,6 +5,7 @@ from pymavlink import mavutil
 import time, sys, argparse, math
 import threading
 """
+from statistics import mean
 import cv2
 import numpy as np
 import picamera
@@ -100,6 +101,10 @@ def goForXYZ(byX,byY,byZ):# Use byZ positive for UP
 # FUNCTIONS DETECTION
 ################################################################################################
 def bf_fixer(takeoff_img):
+    """
+    camera = picamera.PiCamera()
+    camera.start_preview()
+    """
     const = 180 / math.pi
     pitch,roll = 100, 100
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -110,9 +115,8 @@ def bf_fixer(takeoff_img):
     """
     HARD_CUT_POINT = 50
 
-    camera = picamera.PiCamera()
-    camera.start_preview()
-    time.sleep(0.6)
+    
+    #time.sleep(0.6)
     camera.capture('current_img.png', format='png')
     camera.stop_preview()
     camera.close()
@@ -149,7 +153,10 @@ def bf_fixer(takeoff_img):
 
 
 def imageMassCoordinates(string_for_frame,altitude):
-    (pxDistancex,pxDistancey)=bf_fixer(string_for_frame)
+    
+    string = "altitude_" + str(string_for_frame) + ".png" #path to saveFrame
+    
+    (pxDistancex,pxDistancey)=bf_fixer(string)
     distancex = altitude * math.tan(horizontal_fov* math.pi / 360) * 2
     distancey = altitude * math.tan(vertical_fov * math.pi / 360) * 2
 
@@ -161,6 +168,10 @@ def imageMassCoordinates(string_for_frame,altitude):
     return movex,movey
 
 def saveFrames(frameAltitude):#Saving PNG images at current altitude
+    """
+    camera = picamera.PiCamera()
+    camera.start_preview()    
+    """
     const = 180 / math.pi
     pitch,roll = 1, 1
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -169,9 +180,8 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
         print("Trying to stabilize for taking frame")
         time.sleep(0.2)
     """
-    camera = picamera.PiCamera()
-    camera.start_preview()
-    time.sleep(0.1)
+    
+    #time.sleep(0.1)
     camera.capture('altitude_' + str(frameAltitude)+".png", format = 'png')
     camera.stop_preview()
     camera.close()
