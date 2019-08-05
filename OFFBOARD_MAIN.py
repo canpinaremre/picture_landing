@@ -45,7 +45,7 @@ vehicle = connect(connection_string, wait_ready=True)
 # FUNCTIONS FOR MOVING
 ################################################################################################
 def setpoint_buffer():
-    global x,y,z,exit_sp_buffer
+    global x,y,z
     while True:
         msg=vehicle.message_factory.set_position_target_local_ned_encode(
             0,
