@@ -64,8 +64,8 @@ def setpoint_buffer():
                 0,
                 0,0,
                 mavutil.mavlink.MAV_FRAME_BODY_NED,
-                0b11111111011,
-                0,0,z,
+                0b11111111000,
+                x,y,z,
                 0,0,0,
                 0,0,0,
                 0,0)
