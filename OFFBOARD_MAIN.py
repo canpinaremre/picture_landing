@@ -134,6 +134,7 @@ def bf_fixer(takeoff_img):
     #time.sleep(0.6)
     current_img = "current_" + str(vehicle.locaiton.global_relative_frame.alt)+".png"
     camera.capture(current_img, format='png')
+    camera.stop_preview()
     camera.close()
 
     img1 = cv2.imread(takeoff_img, cv2.IMREAD_GRAYSCALE)
