@@ -14,16 +14,14 @@ import picamera
 ################################################################################################
 x,y,z =0,0,0
 exit_sp_buffer=False
-
+memoryZ = 0
+wait_key = False
+onLand = False
 #Calibrate the camera !!!
 #Settings
-gPerMeter=0 # No need to fix
-gFrameCount=0 # No need to fix
-startLandingAlt=0 # No need to fix
-finishLandingAlt=0
-MAX_ERROR_IN_DISTANCE = 1
+VERTICAL_SPEED = 0.4
 MAX_ERROR_IN_ALTITUDE = 0.10 # THIS IS METER
-MAX_ERROR_IN_DEGREES = 0.8
+MAX_ERROR_IN_DEGREES = 8
 
 horizontal_fov = 53.5
 vertical_fov = 41.41
@@ -89,6 +87,22 @@ def tryArming():
             break
     print ("Armed :",vehicle.armed)
 
+def tryDisarming():
+    while True:
+        vehicle._master.mav.command_long_send(
+        1, # autopilot system id
+        1, # autopilot component id
+        400, # command id, ARM/DISARM
+        0, # confirmation
+        0, # arm!
+        0,0,0,0,0,0 # unused parameters for this command
+        )
+        print("Trying Disarming")
+        time.sleep(0.3)
+        if (vehicle.armed == False):
+            break
+    print ("Armed :",vehicle.armed)
+
 
 def startThread():
     t = threading.Thread(target=setpoint_buffer)
@@ -105,40 +119,62 @@ def startOffboardMode():
 def getAlt():
     return vehicle.location.global_relative_frame.alt
 
-def targetAltitude(aTargetAltitude):
+def targetAltitude():
     count=0
-    global z
+    global z,memoryZ,wait_key,onLand,VERTICAL_SPEED,MAX_ERROR_IN_ALTITUDE
+    aTargetAltitude = memoryZ
+    wait_key=True
     while count < 11:
-        if( getAlt() < (aTargetAltitude * 0.95) ):
-            z = -1
-        elif( getAlt() > (aTargetAltitude * 1.05) ):
-            z = 1
+        if( getAlt() < (aTargetAltitude - MAX_ERROR_IN_ALTITUDE) ):
+            count =0
+            z = -VERTICAL_SPEED
+            print("Up")
+        elif( getAlt() > (aTargetAltitude + MAX_ERROR_IN_ALTITUDE) ):
+            count=0
+            print("Down")
+            z = VERTICAL_SPEED
         else:
+            print("Stay")
             count += 1
+            z=0
         time.sleep(0.2)
+        if getAlt() <= 0.1 and onLand:
+            print("Land !")
+            while vehicle.mode != "LAND":
+                vehicle._master.set_mode_px4('LAND',None,None)
+                print ("Trying land")
+                time.sleep(0.3)
+            time.sleep(2)
+            print ("Landed!")
+            break
+            
+    print("Targeted :",aTargetAltitude)
+    print("Real :",getAlt())
+    print("Closing thread")
+    wait_key=False
 def getMeter(aLocation1,aLocation2):
 
     return False
 
-
-#Use offset meters
-def goForXYZ_velocity(byX,byY,byZ):
-    global x,y,z
-    duration=8
-    t=0
-    while (t < (duration*1.0)):
-        x = ( byX / duration) * 1.1
-        y = ( byY / duration) * 1.1
-        z = (-byZ / duration) * 1.1
-        t += 0.15
-        time.sleep(0.15)
-    x,y,z=0,0,0
-
 def goForXYZ(byX,byY,byZ):# Use byZ positive for UP
-    global x,y,z
-    x += byX
-    y += byY
-    z += -byZ
+    global x,y,z,flag_velocity,memoryZ
+
+    flag_velocity=True
+    t=0
+    duration = 4
+    memoryZ += byZ
+    zzz = threading.Thread(target=targetAltitude)
+    zzz.daemon = True
+    zzz.start()
+
+    while (t < (duration*0.8)):
+        x = ( byX / duration) * 0.9
+        y = ( byY / duration) * 0.9
+        t +=0.25
+        time.sleep(0.25)
+    x,y = 0,0
+    while wait_key:
+        time.sleep(0.5)
 
 
 ################################################################################################
@@ -150,7 +186,8 @@ def bf_fixer(takeoff_img):
 
     camera = picamera.PiCamera()
     camera.start_preview()
-
+    """
+    time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 100, 100
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -158,14 +195,15 @@ def bf_fixer(takeoff_img):
         roll = vehicle.attitude.roll * const
         print("Trying to stabilize for taking frame")
         time.sleep(0.3)
-
+    """
     #time.sleep(0.6)
-    camera.capture('current_img.png', format='png')
+    current_frame_string = "current_" + str(getAlt()) + ".png"
+    camera.capture(current_frame_string, format='png')
     camera.stop_preview()
     camera.close()
 
     img1 = cv2.imread(takeoff_img, cv2.IMREAD_GRAYSCALE)
-    img2 = cv2.imread('current_img.png', cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread(current_frame_string, cv2.IMREAD_GRAYSCALE)
 
     orb = cv2.ORB_create()
     kp1, des1 = orb.detectAndCompute(img1, None)
@@ -214,6 +252,8 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
     """
     camera = picamera.PiCamera()
     camera.start_preview()
+    """
+    time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 100, 100
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -221,6 +261,7 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
         roll = vehicle.attitude.roll * const
         print("Trying to stabilize for taking frame")
         time.sleep(0.3)
+    """
     #time.sleep(0.1)
     camera.capture('altitude_' + str(frameAltitude)+".png", format = 'png')
     camera.stop_preview()
@@ -249,15 +290,22 @@ def print_status():
     print (" GPS: %s" % vehicle.gps_0)
     print (" Alt: %s" % vehicle.location.global_relative_frame.alt)
 
+def landVehicle():
+    print("Land !")
+    while vehicle.mode != "LAND":
+        vehicle._master.set_mode_px4('LAND',None,None)
+        print ("Trying land")
+        time.sleep(0.3)
+    time.sleep(2)
+    print ("Landed!")
 
 def missionController(start,finish):
-    global exit_sp_buffer,x,y,z,flag_velocity
+    global exit_sp_buffer,x,y,z,flag_velocity,onLand
     while not home_position_set:
         print ("Waiting for home position...")
         time.sleep(1)
 
     print_status()
-    flag_velocity = False
     tryArming()
     startThread()
     startOffboardMode()
@@ -267,35 +315,28 @@ def missionController(start,finish):
         saveFrames(i)
         time.sleep(1)
         goForXYZ(0,0,1)
-        time.sleep(5)
+        time.sleep(0.5)
+        print("Altitude : ",getAlt())
     
     print("Landing started!")
-
+    onLand = True
     x,y,z=0,0,0
-    flag_velocity = True
-
     for i in range(finish,start,-1):
-        time.sleep(5)
+        time.sleep(0.5)
         print("Looking picture altitude",i-1)
         print("Altitude :",i)
         print("Real altitude:",vehicle.location.global_relative_frame.alt)
         print("Target altitude :",i-1)
         goX,goY = imageMassCoordinates(i-1,i)
-        goForXYZ_velocity(goX,goY,-1)
+        goForXYZ(goX,goY,-1)
 
-
+    tryDisarming()
     time.sleep(2)
-
-    print("Land !")
-    while vehicle.mode != "LAND":
-        vehicle._master.set_mode_px4('LAND',None,None)
-        print ("Trying land")
-        time.sleep(0.3)
-    time.sleep(2)
-    print ("Landed!")
-
     
+    print("Closing vehicle...")
     vehicle.close()
+    time.sleep(0.5)
+    print ("vehicle closed!")
 
 ################################################################################################
 # MAIN
