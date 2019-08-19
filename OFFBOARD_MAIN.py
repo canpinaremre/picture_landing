@@ -103,8 +103,8 @@ def goForXYZ(byX,byY,byZ):# Use byZ positive for UP
 def checkAltitude(tagretAltitude):
     count = 0
     while True:
-        if (vehicle.location.global_relative_frame.alt < (tagretAltitude + 0.1)):
-            if(vehicle.location.global_relative_frame.alt > (tagretAltitude - 0.1)):
+        if (vehicle.location.global_relative_frame.alt < (tagretAltitude + MAX_ERROR_IN_ALTITUDE)):
+            if(vehicle.location.global_relative_frame.alt > (tagretAltitude - MAX_ERROR_IN_ALTITUDE)):
                 count += 1
                 if(count >= 10):
                     print("Target altitude reached")
@@ -120,6 +120,7 @@ def bf_fixer(takeoff_img):
     camera = picamera.PiCamera()
     camera.start_preview()
     """
+    time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 100, 100
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -188,6 +189,7 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
     camera = picamera.PiCamera()
     camera.start_preview()    
     """
+    time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 1, 1
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
