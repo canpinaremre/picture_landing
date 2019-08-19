@@ -100,6 +100,21 @@ def goForXYZ(byX,byY,byZ):# Use byZ positive for UP
 ################################################################################################
 # FUNCTIONS DETECTION
 ################################################################################################
+def checkAltitude(tagretAltitude):
+    count = 0
+    while True:
+        if (vehicle.location.global_relative_frame.alt < (tagretAltitude + 0.1)):
+            if(vehicle.location.global_relative_frame.alt > (tagretAltitude - 0.1)):
+                count += 1
+                if(count >= 10):
+                    print("Target altitude reached")
+                    break
+            else:
+                count = 0
+        else:
+            count = 0
+        time.sleep(0.5)
+
 def bf_fixer(takeoff_img):
     """
     camera = picamera.PiCamera()
@@ -117,12 +132,12 @@ def bf_fixer(takeoff_img):
 
     
     #time.sleep(0.6)
-    camera.capture('current_img.png', format='png')
-    camera.stop_preview()
+    current_img = "current_" + str(vehicle.locaiton.global_relative_frame.alt)+".png"
+    camera.capture(current_img, format='png')
     camera.close()
 
     img1 = cv2.imread(takeoff_img, cv2.IMREAD_GRAYSCALE)
-    img2 = cv2.imread('current_img.png', cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread(current_img, cv2.IMREAD_GRAYSCALE)
 
     orb = cv2.ORB_create()
     kp1, des1 = orb.detectAndCompute(img1, None)
@@ -228,20 +243,20 @@ def missionController(start,finish):
         saveFrames(i)
         time.sleep(1)
         goForXYZ(0,0,1)
-        time.sleep(5)
+        checkAltitude(i+1)
     
     print("Landing started!")
     #goX,goY = imageMassCoordinates(finish,finish)
     #goForXYZ(goX,goY,0)
     for i in range(finish,start,-1):
-        time.sleep(5)
+        
         print("Looking picture altitude",i-1)
         print("Altitude :",i)
         print("Real altitude:",vehicle.location.global_relative_frame.alt)
         print("Target altitude :",i-1)
         goX,goY = imageMassCoordinates(i-1,i)
         goForXYZ(goX,goY,-1)
-    time.sleep(5)
+        checkAltitude(i-1)
     print("Land !")
     while vehicle.mode != "LAND":
         vehicle._master.set_mode_px4('LAND',None,None)
