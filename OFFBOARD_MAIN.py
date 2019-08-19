@@ -39,7 +39,10 @@ connection_string       = '127.0.0.1:14540'
 print ("Connecting")
 vehicle = connect(connection_string, wait_ready=True)
 
-
+"""
+camera = picamera.PiCamera()
+camera.start_preview()
+"""
 
 ################################################################################################
 # FUNCTIONS FOR MOVING
@@ -116,11 +119,8 @@ def checkAltitude(tagretAltitude):
         time.sleep(0.5)
 
 def bf_fixer(takeoff_img):
-    """
-    camera = picamera.PiCamera()
-    camera.start_preview()
-    """
-    time.sleep(1.5) # allow the autoexposure function to work
+    
+    
     const = 180 / math.pi
     pitch,roll = 100, 100
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
@@ -130,13 +130,12 @@ def bf_fixer(takeoff_img):
         time.sleep(0.3)
     """
     HARD_CUT_POINT = 50
-
+    global camera
     
     #time.sleep(0.6)
     current_img = "current_" + str(vehicle.locaiton.global_relative_frame.alt)+".png"
     camera.capture(current_img, format='png')
-    camera.stop_preview()
-    camera.close()
+    
 
     img1 = cv2.imread(takeoff_img, cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread(current_img, cv2.IMREAD_GRAYSCALE)
@@ -185,10 +184,7 @@ def imageMassCoordinates(string_for_frame,altitude):
     return movex,movey
 
 def saveFrames(frameAltitude):#Saving PNG images at current altitude
-    """
-    camera = picamera.PiCamera()
-    camera.start_preview()    
-    """
+    
     time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 1, 1
@@ -198,11 +194,10 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
         print("Trying to stabilize for taking frame")
         time.sleep(0.2)
     """
-    
+    global camera
     #time.sleep(0.1)
     camera.capture('altitude_' + str(frameAltitude)+".png", format = 'png')
-    camera.stop_preview()
-    camera.close()
+   
     """
     print("Frame captured altitude_"+str(frameAltitude)+".png")
 
@@ -252,7 +247,7 @@ def missionController(start,finish):
     #goX,goY = imageMassCoordinates(finish,finish)
     #goForXYZ(goX,goY,0)
     for i in range(finish,start,-1):
-        
+        #time.sleep(5)
         print("Looking picture altitude",i-1)
         print("Altitude :",i)
         print("Real altitude:",vehicle.location.global_relative_frame.alt)
@@ -280,3 +275,9 @@ time.sleep(1)
 missionController(0,5)
 time.sleep(1)
 print("DONE !")
+"""
+
+camera.stop_preview()
+
+camera.close()
+"""
