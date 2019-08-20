@@ -33,12 +33,15 @@ vertical_resolution = 480
 ################################################################################################
 # CONNECTION
 ################################################################################################
-
+""" SITL
 connection_string       = '127.0.0.1:14540'
 
 print ("Connecting")
 vehicle = connect(connection_string, wait_ready=True)
-
+"""
+connection_string = "/dev/ttyAMA0"
+print ("connecting...")
+vehicle = connect(connection_string,baud=57600,wait_ready=True)
 
 camera = picamera.PiCamera()
 camera.start_preview()
