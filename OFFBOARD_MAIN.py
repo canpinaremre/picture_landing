@@ -177,7 +177,11 @@ def imageMassCoordinates(string_for_frame,altitude):
     
     string = "altitude_" + str(string_for_frame) + ".png" #path to saveFrame
     
-    (pxDistancex,pxDistancey)=bf_fixer(string)
+    (pxDistancex,pxDistancey)=(0,0)
+    try:
+        (pxDistancex,pxDistancey)=bf_fixer(string)
+    except:
+        print ("Failed to run bf_fixer\npx =0")
     distancex = altitude * math.tan(horizontal_fov* math.pi / 360) * 2
     distancey = altitude * math.tan(vertical_fov * math.pi / 360) * 2
 
