@@ -27,8 +27,8 @@ MAX_ERROR_IN_ALTITUDE = 0.10 # THIS IS METER
 MAX_ERROR_IN_DEGREES = 0.8
 horizontal_fov = 53.5
 vertical_fov = 41.41
-horizontal_resolution = 640
-vertical_resolution = 480
+horizontal_resolution = 1296 #640
+vertical_resolution = 972    #480
 
 ################################################################################################
 # CONNECTION
@@ -44,6 +44,7 @@ print ("connecting...")
 vehicle = connect(connection_string,baud=57600,wait_ready=True)
 
 camera = picamera.PiCamera()
+camera.resolution = (horizontal_resolution, vertical_resolution)
 camera.start_preview()
 
 
