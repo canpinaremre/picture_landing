@@ -150,7 +150,9 @@ def bf_fixer(takeoff_img):
     # print("Length of matches: " + str(len(matches)))
     matches = sorted(matches, key=lambda x: x.distance)[:HARD_CUT_POINT]
     # print("Worst distance: " + str(matches[len(matches)-1].distance))
-
+    img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches[:HARD_CUT_POINT],None,flags=2)
+    plt.imsave(current_img + "_compare.png",img3)
+    
     diff_arr_x = []
     diff_arr_y = []
     for match in matches:
