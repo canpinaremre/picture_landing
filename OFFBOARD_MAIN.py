@@ -4,12 +4,12 @@ from dronekit import connect, Command, LocationGlobal,VehicleMode
 from pymavlink import mavutil
 import time, sys, argparse, math
 import threading
-"""
+
 from statistics import mean
 import cv2
 import numpy as np
 import picamera
-"""
+
 ################################################################################################
 # Settings
 ################################################################################################
@@ -39,10 +39,10 @@ connection_string       = '127.0.0.1:14540'
 print ("Connecting")
 vehicle = connect(connection_string, wait_ready=True)
 
-"""
+
 camera = picamera.PiCamera()
 camera.start_preview()
-"""
+
 
 ################################################################################################
 # FUNCTIONS FOR MOVING
@@ -128,7 +128,7 @@ def bf_fixer(takeoff_img):
         roll = vehicle.attitude.roll * const
         print("Trying to stabilize for taking frame")
         time.sleep(0.3)
-    """
+    
     HARD_CUT_POINT = 50
     global camera
     
@@ -158,14 +158,14 @@ def bf_fixer(takeoff_img):
         img2_idx = match.trainIdx
         x1, y1 = kp1[img1_idx].pt
         x2, y2 = kp2[img2_idx].pt
-        diff_arr_x.append(x1-x2)
+        diff_arr_x.append(x2-x1)
         diff_arr_y.append(y1-y2)
 
     mean_x = statistics.mean(diff_arr_x)
     mean_y = statistics.mean(diff_arr_y)
+    mean_x,mean_y=mean_y,mean_x
     return (mean_x, mean_y)
-    """
-    return 350,350
+    
 
 
 def imageMassCoordinates(string_for_frame,altitude):
@@ -193,12 +193,12 @@ def saveFrames(frameAltitude):#Saving PNG images at current altitude
         roll = vehicle.attitude.roll * const
         print("Trying to stabilize for taking frame")
         time.sleep(0.2)
-    """
+    
     global camera
     #time.sleep(0.1)
     camera.capture('altitude_' + str(frameAltitude)+".png", format = 'png')
    
-    """
+    
     print("Frame captured altitude_"+str(frameAltitude)+".png")
 
 def set_home_location():
@@ -275,9 +275,8 @@ time.sleep(1)
 missionController(0,5)
 time.sleep(1)
 print("DONE !")
-"""
+
 
 camera.stop_preview()
 
 camera.close()
-"""
