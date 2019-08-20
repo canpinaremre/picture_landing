@@ -163,7 +163,6 @@ def bf_fixer(takeoff_img):
 
     mean_x = statistics.mean(diff_arr_x)
     mean_y = statistics.mean(diff_arr_y)
-    mean_x,mean_y=mean_y,mean_x
     return (mean_x, mean_y)
     
 
@@ -181,6 +180,7 @@ def imageMassCoordinates(string_for_frame,altitude):
 
     print("Move x :",movex)
     print("Move y :",movey)
+    movex,movey=movey,movex
     return movex,movey
 
 def saveFrames(frameAltitude):#Saving PNG images at current altitude
