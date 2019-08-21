@@ -195,7 +195,7 @@ def imageMassCoordinates(string_for_frame,altitude):
 
 def saveFrames(frameAltitude):#Saving PNG images at current altitude
     
-    time.sleep(1.5) # allow the autoexposure function to work
+    #time.sleep(1.5) # allow the autoexposure function to work
     const = 180 / math.pi
     pitch,roll = 1, 1
     while not (abs(roll) + abs(pitch))<MAX_ERROR_IN_DEGREES:
